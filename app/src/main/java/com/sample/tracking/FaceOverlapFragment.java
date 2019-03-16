@@ -104,53 +104,50 @@ public class FaceOverlapFragment extends CameraOverlapFragment {
         }
         frameIndex += 1;
 
-        List<Face> faceActions = mMultiTrack106.getTrackingInfo();
-        if (faceActions != null) {
-
-            if (!mOverlap.getHolder().getSurface().isValid()) {
-                return;
-            }
-
-            Canvas canvas = mOverlap.getHolder().lockCanvas();
-            if (canvas == null) {
-                return;
-            }
-            canvas.drawColor(0, PorterDuff.Mode.CLEAR);
-            canvas.setMatrix(getMatrix());
-
-            boolean rotate270 = mCameraInfo.orientation == 270;
-            for (Face r : faceActions) {
-                Rect rect = new Rect(PREVIEW_HEIGHT - r.left, r.top, PREVIEW_HEIGHT - r.right, r.bottom);
-                PointF[] points = new PointF[106];
-                for (int i = 0; i < 106; i++) {
-                    points[i] = new PointF(r.landmarks[i * 2], r.landmarks[i * 2 + 1]);
-                }
-
-                float[] visibles = new float[106];
-                for (int i = 0; i < points.length; i++) {
-                    // 标记关键点
-                    if (i == 2 - 1 || i == 13 - 1 || i == 35 - 1 || i == 56 - 1 || i == 4 - 1 || i == 54 - 1 || i == 68 - 1  // 左眼
-                            || i == 105 - 1 || i == 52 - 1 || i == 42 - 1 || i == 106 - 1 || i == 44 - 1 || i == 86 - 1 || i == 48 - 1  // 右眼
-                            || i == 41 - 1 || i == 64 - 1 || i == 37 - 1 || i == 104 - 1 || i == 26 - 1 || i == 3 - 1  // 嘴巴
-                    ) {
-                        visibles[i] = 0.0f;
-                    } else {
-                        visibles[i] = 1.0f;
-                    }
-
-                    if (rotate270) {
-                        points[i].x = PREVIEW_HEIGHT - points[i].x;
-
-                    }
-                }
-
-                // 画图
-                STUtils.drawFaceRect(canvas, rect, PREVIEW_HEIGHT, PREVIEW_WIDTH, frontCamera);
-                STUtils.drawPoints(canvas, mPaint, points, visibles, PREVIEW_HEIGHT, PREVIEW_WIDTH, frontCamera);
-
-            }
-            mOverlap.getHolder().unlockCanvasAndPost(canvas);
+        if (!mOverlap.getHolder().getSurface().isValid()) {
+            return;
         }
+        Canvas canvas = mOverlap.getHolder().lockCanvas();
+        if (canvas == null) {
+            return;
+        }
+        canvas.drawColor(0, PorterDuff.Mode.CLEAR);
+        canvas.setMatrix(getMatrix());
+
+        Face faceActions = mMultiTrack106.getTrackingInfo();
+        if (faceActions != null) {
+            boolean rotate270 = mCameraInfo.orientation == 270;
+
+            Rect rect = new Rect(PREVIEW_HEIGHT - faceActions.left, faceActions.top, PREVIEW_HEIGHT - faceActions.right, faceActions.bottom);
+            PointF[] points = new PointF[106];
+            for (int i = 0; i < 106; i++) {
+                points[i] = new PointF(faceActions.landmarks[i * 2], faceActions.landmarks[i * 2 + 1]);
+            }
+
+            float[] visibles = new float[106];
+            for (int i = 0; i < points.length; i++) {
+                // 标记关键点
+                if (i == 1 || i == 12 || i == 34 || i == 55 || i == 3 || i == 53 || i == 67  // 左眼
+                        || i == 104 || i == 51 || i == 41 || i == 105 || i == 43 || i == 85 || i == 47  // 右眼
+                        || i == 40 || i == 63 || i == 36 || i == 103 || i == 25 || i == 2  // 嘴巴
+                        || i == 66 || i == 49  // 腮帮
+                ) {
+                    visibles[i] = 0.0f;
+                } else {
+                    visibles[i] = 1.0f;
+                }
+                if (rotate270) {
+                    points[i].x = PREVIEW_HEIGHT - points[i].x;
+
+                }
+            }
+
+            // 画图
+            STUtils.drawFaceRect(canvas, rect, PREVIEW_HEIGHT, PREVIEW_WIDTH, frontCamera);
+            STUtils.drawPoints(canvas, mPaint, points, visibles, PREVIEW_HEIGHT, PREVIEW_WIDTH, frontCamera);
+
+        }
+        mOverlap.getHolder().unlockCanvasAndPost(canvas);
     }
 
     @Override
