@@ -4,6 +4,10 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.AssetFileDescriptor;
+import android.content.res.AssetManager;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -74,5 +78,55 @@ public class Util {
         }
         return false;
     }
+
+
+    private static MediaPlayer mMediaPlayer;
+    private static boolean isPlaying;
+
+    public static void playWarning(Context context) {
+        if (isPlaying) {
+            return;
+        }
+        isPlaying = true;
+        if (mMediaPlayer == null) {
+            synchronized (Util.class) {
+                if (mMediaPlayer == null) {
+                    mMediaPlayer = new MediaPlayer();
+                    mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                }
+            }
+        }
+        try {
+            AssetManager mAssetManager = context.getAssets();
+            AssetFileDescriptor mAssetFileDescriptor = mAssetManager.openFd("warning.wav");
+            mMediaPlayer.reset();
+            mMediaPlayer.setDataSource(mAssetFileDescriptor.getFileDescriptor(),
+                    mAssetFileDescriptor.getStartOffset(), mAssetFileDescriptor.getLength());
+            mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mp) {
+                    mMediaPlayer.start();
+                }
+            });
+            mMediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+                @Override
+                public boolean onError(MediaPlayer mp, int what, int extra) {
+                    isPlaying = false;
+                    return false;
+                }
+            });
+            mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    isPlaying = false;
+                }
+            });
+            mMediaPlayer.prepareAsync();
+        } catch (Exception e) {
+            isPlaying = false;
+        }
+
+    }
+
 
 }

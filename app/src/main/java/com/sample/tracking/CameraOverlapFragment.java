@@ -46,19 +46,6 @@ public class CameraOverlapFragment extends Fragment {
         mOverlap.setZOrderOnTop(true);
         mOverlap.getHolder().setFormat(PixelFormat.TRANSLUCENT);
         mSurfaceHolder = mSurfaceview.getHolder();
-        mSurfaceview.setOnClickListener(
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (CameraFacing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-                            CameraFacing = Camera.CameraInfo.CAMERA_FACING_BACK;
-                        } else {
-                            CameraFacing = Camera.CameraInfo.CAMERA_FACING_FRONT;
-                        }
-                        openCamera(CameraFacing);
-                    }
-                }
-        );
         mSurfaceHolder.addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceChanged(SurfaceHolder holder, int format,

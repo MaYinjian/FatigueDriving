@@ -1,6 +1,10 @@
 package zeusees.tracking;
 
+import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
+
+import com.sample.tracking.Util;
 
 
 public class FaceTracking {
@@ -28,10 +32,16 @@ public class FaceTracking {
     private long session;
     private Face face;
     private int lastID = -1;
-    private String TAG = "FaceTracking";
+    private final String TAG = "FaceTracking";
+    private Context mContext;
+    // 打哈欠时间
+    private final int mYawnTime = 1500;
+    // 转头时间
+    private final int mHeadTurnTime = 1500;
 
-    public FaceTracking(String pathModel) {
+    public FaceTracking(String pathModel, Context context) {
         session = createSession(pathModel);
+        mContext = context;
     }
 
     protected void finalize() throws Throwable {
@@ -85,12 +95,18 @@ public class FaceTracking {
             // 检测各部位疲劳状态
             if (checkEyesClosed()) {
                 Log.e(TAG, "WARNING: 检测到闭眼");
+                Toast.makeText(mContext, "疲劳驾驶警告！！！", Toast.LENGTH_SHORT).show();
+                Util.playWarning(mContext);
             }
             if (checkYawn()) {
+                Toast.makeText(mContext, "疲劳驾驶警告！！！", Toast.LENGTH_SHORT).show();
                 Log.e(TAG, "WARNING: 检测到打哈欠");
+                Util.playWarning(mContext);
             }
             if (checkHeadTurned()) {
+                Toast.makeText(mContext, "危险驾驶警告！！！", Toast.LENGTH_SHORT).show();
                 Log.e(TAG, "WARNING: 检测到左顾右盼");
+                Util.playWarning(mContext);
             }
         }
     }
@@ -109,10 +125,11 @@ public class FaceTracking {
     static int eyesClosed = 0;
     static int eyesOpened = 0;
     static long eyesClosedBeginTime;
+
     public boolean checkEyesClosed() {
         leftEAR = (dis2points(1, 12) + dis2points(34, 3) + dis2points(53, 67)) / (dis2points(94, 59) * 3);
         rightEAR = (dis2points(104, 51) + dis2points(41, 43) + dis2points(85, 47)) / (dis2points(27, 20) * 3);
-        Log.e(TAG,  "左眼: " + leftEAR + "右眼: " + rightEAR);
+        Log.d(TAG, "左眼: " + leftEAR + "右眼: " + rightEAR);
 
         if (leftEAR / EAR < eyesThreshold && rightEAR / EAR < eyesThreshold) {
             eyesClosed += 1;
@@ -147,9 +164,10 @@ public class FaceTracking {
     static int mouthOpened = 0;
     static int mouthClosed = 0;
     static long yawnBeginTime;
+
     public boolean checkYawn() {
         mouthAR = (dis2points(40, 63) + dis2points(36, 103) + dis2points(25, 2)) / (dis2points(61, 42) * 3);
-        Log.e(TAG,  "嘴巴: " + mouthAR);
+        Log.d(TAG, "嘴巴: " + mouthAR);
 
         if (mouthAR > yawnThreshold) {
             mouthOpened += 1;
@@ -157,7 +175,7 @@ public class FaceTracking {
                 yawnBeginTime = System.currentTimeMillis();
             } else {
                 long timeDuring = System.currentTimeMillis() - yawnBeginTime;
-                if (timeDuring >= 3000) {  // 持续3秒
+                if (timeDuring >= mYawnTime) {  // 持续3秒
                     // 加一层频率判断
                     double yawnFreq = mouthOpened * 1.0 / (mouthClosed + mouthOpened);
                     if (yawnFreq < 0.9) {
@@ -178,15 +196,17 @@ public class FaceTracking {
         }
         return false;
     }
+
     double mouthToCheekDR;  // 坐标距离比
     static double turnLeftThreshold = 0.45, turnRightThreshold = 3.5;  // 阈值
     static int turnLeft = 0;
     static int turnRight = 0;
     static int turnAhead = 0;
     static long turnBeginTime;
+
     public boolean checkHeadTurned() {
         mouthToCheekDR = dis2points(36, 66) / dis2points(36, 49);
-        Log.e(TAG,  "头: " + mouthToCheekDR);
+        Log.d(TAG, "头: " + mouthToCheekDR);
 
         if (mouthToCheekDR <= turnLeftThreshold || mouthToCheekDR >= turnRightThreshold) {
             if (mouthToCheekDR <= turnLeftThreshold) {
@@ -206,7 +226,7 @@ public class FaceTracking {
                 turnBeginTime = System.currentTimeMillis();
             } else {
                 long timeDuring = System.currentTimeMillis() - turnBeginTime;
-                if (timeDuring >= 3000) {  // 持续3秒
+                if (timeDuring >= mHeadTurnTime) {  // 持续3秒
                     // 加一层频率判断
                     double turnFreq = (turnLeft + turnRight) * 1.0 / (turnLeft + turnRight + turnAhead);
                     if (turnFreq < 0.9) {

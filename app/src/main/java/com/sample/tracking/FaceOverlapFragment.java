@@ -174,7 +174,7 @@ public class FaceOverlapFragment extends CameraOverlapFragment {
             };
 
             if (authCallback != null) {
-                mMultiTrack106 = new FaceTracking("/sdcard/ZeuseesFaceTracking/models");
+                mMultiTrack106 = new FaceTracking("/sdcard/ZeuseesFaceTracking/models", getActivity());
             }
 
         }
